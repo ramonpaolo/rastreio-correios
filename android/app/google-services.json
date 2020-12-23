@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "577364780571",
+    "project_id": "correios-f0e84",
+    "storage_bucket": "correios-f0e84.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:577364780571:android:62fd93509e201b1142babe",
+        "android_client_info": {
+          "package_name": "com.example.correios"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "577364780571-hrrvl99j3vipcesqp1bhcthumapcm90v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.correios",
+            "certificate_hash": "7f3bdcee61d971d9d836b9ed85690172d6352b42"
+          }
+        },
+        {
+          "client_id": "577364780571-dajo4cs3rb1p3i4dfn2a15oe0ghvud10.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBu7RUHIExV-SGbhwg-dfDenQLYnX4R9PA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "577364780571-dajo4cs3rb1p3i4dfn2a15oe0ghvud10.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
