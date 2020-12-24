@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:path_provider/path_provider.dart';
 
 //---- Screens
@@ -63,7 +64,11 @@ class _LoginAndroidState extends State<LoginAndroid> {
                 ),
                 Divider(
                   color: Colors.white,
-                  height: size.height * 0.25,
+                  height: size.height * 0.06,
+                ),
+                SvgPicture.asset(
+                  "assets/auth.svg",
+                  height: size.height * 0.24,
                 ),
                 campForm(
                   TextInputType.emailAddress,
@@ -109,8 +114,8 @@ class _LoginAndroidState extends State<LoginAndroid> {
                   ),
                 ),
                 Divider(
-                  height: size.height * 0.23,
                   color: Colors.white,
+                  height: size.height * 0.18,
                 ),
                 Align(
                     alignment: Alignment(0.95, 0),
@@ -147,9 +152,9 @@ class _LoginAndroidState extends State<LoginAndroid> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
                                         children: [
-                                          Text("  Rastremento de encomendas: "),
+                                          Text("Rastremento de encomendas: "),
                                           Text(
-                                            " API do Link&Track",
+                                            "API do Link&Track",
                                             style: TextStyle(
                                                 fontStyle: FontStyle.italic,
                                                 fontWeight: FontWeight.bold),
@@ -160,9 +165,9 @@ class _LoginAndroidState extends State<LoginAndroid> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
                                         children: [
-                                          Text("  Icones: "),
+                                          Text("Icones: "),
                                           Text(
-                                            " FreePik",
+                                            "FreePik, Iconscout",
                                             style: TextStyle(
                                                 fontStyle: FontStyle.italic,
                                                 fontWeight: FontWeight.bold),
@@ -205,13 +210,14 @@ class _LoginAndroidState extends State<LoginAndroid> {
             email: _controllerEmail.text, password: _controllerPassword.text);
         var directory = await getApplicationDocumentsDirectory();
         final file = File(directory.path + "/data.json");
-        file.writeAsStringSync(jsonEncode({
+        await file.writeAsStringSync(await jsonEncode({
           "isLogged": true,
           "name": FirebaseAuth.instance.currentUser.displayName,
           "email": FirebaseAuth.instance.currentUser.email,
           "image": FirebaseAuth.instance.currentUser.photoURL
         }));
-        Navigator.pushAndRemoveUntil(
+        print("Dados salvos");
+        await Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => NavAndroid()),
             (screen) => false);
@@ -219,7 +225,7 @@ class _LoginAndroidState extends State<LoginAndroid> {
         if (e.code == "user-not-found") {
           snackBar("Email não encontrado");
         } else if (e.code == "wrong-password") {
-          snackBar("enha errada");
+          snackBar("Senha errada");
         } else if (e.code == "invalid-email") {
           snackBar("Email inválido");
         }
