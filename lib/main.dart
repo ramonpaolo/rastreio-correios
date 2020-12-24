@@ -19,9 +19,13 @@ void main() async {
   await Firebase.initializeApp();
 
   Platform.isAndroid == true
-      ? runApp(MaterialApp(home: SplashScreen()))
+      ? runApp(MaterialApp(
+          home: SplashScreen(),
+          title: "Rastreio-correios",
+        ))
       : runApp(CupertinoApp(
           home: HomeIos(),
+          title: "Rastreio-correios",
         ));
 }
 

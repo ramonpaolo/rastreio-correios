@@ -1,14 +1,15 @@
 //---- Packages
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:correios/src/android/view/auth/Login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:image_picker/image_picker.dart';
 
 //---- Screens
+import 'package:correios/src/android/view/auth/Login.dart';
 import 'package:correios/src/android/nav.dart';
-import 'package:path_provider/path_provider.dart';
 
 class CadastroAndroid extends StatefulWidget {
   @override
@@ -16,11 +17,17 @@ class CadastroAndroid extends StatefulWidget {
 }
 
 class _CadastroAndroidState extends State<CadastroAndroid> {
+  bool visiblePassword = true;
+
   TextEditingController _controllerEmail = TextEditingController();
   TextEditingController _controllerPassword = TextEditingController();
   TextEditingController _controllerName = TextEditingController();
 
   final _snackBar = GlobalKey<ScaffoldState>();
+
+  var _imageUrlStream;
+  var _imageUrlLocal;
+  var image;
 
   @override
   Widget build(BuildContext context) {
@@ -61,12 +68,37 @@ class _CadastroAndroidState extends State<CadastroAndroid> {
                     ),
                   ],
                 ),
-                Divider(
-                  color: Colors.white,
-                  height: size.height * 0.25,
+                _imageUrlLocal != null
+                    ? Transform.translate(
+                        offset: Offset(0, -size.height * 0.1),
+                        child: ClipRRect(
+                            borderRadius: BorderRadius.circular(400),
+                            child: Container(
+                                child: Image.file(
+                              File(image.path),
+                              fit: BoxFit.cover,
+                              width: size.width * 0.42,
+                              height: size.height * 0.2,
+                            ))))
+                    : Text(""),
+                Container(
+                  child: IconButton(
+                      icon: Icon(Icons.camera),
+                      onPressed: () async {
+                        try {
+                          image = await ImagePicker.platform
+                              .pickImage(source: ImageSource.gallery);
+                          setState(() {
+                            _imageUrlLocal = image.path;
+                          });
+                        } catch (e) {
+                          print("Error: $e");
+                        }
+                      }),
                 ),
                 campForm(
                     TextInputType.name,
+                    TextCapitalization.words,
                     size,
                     "Digite seu nome completo",
                     Icon(
@@ -80,6 +112,7 @@ class _CadastroAndroidState extends State<CadastroAndroid> {
                 ),
                 campForm(
                     TextInputType.emailAddress,
+                    TextCapitalization.none,
                     size,
                     "Digite seu email",
                     Icon(
@@ -93,6 +126,7 @@ class _CadastroAndroidState extends State<CadastroAndroid> {
                 ),
                 campForm(
                     TextInputType.visiblePassword,
+                    TextCapitalization.none,
                     size,
                     "Digite uma senha",
                     Icon(
@@ -210,18 +244,29 @@ class _CadastroAndroidState extends State<CadastroAndroid> {
       ));
     } else if (_controllerEmail.text != "" &&
         _controllerPassword.text != "" &&
-        _controllerName.text != "") {
+        _controllerName.text != "" &&
+        _imageUrlLocal != "") {
       try {
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
             email: _controllerEmail.text, password: _controllerPassword.text);
-        await FirebaseAuth.instance.currentUser
-            .updateProfile(displayName: _controllerName.text);
+
+        await FirebaseStorage.instance
+            .ref("user/${FirebaseAuth.instance.currentUser.uid}")
+            .putFile(File(_imageUrlLocal));
+        _imageUrlStream = await FirebaseStorage.instance
+            .ref("user")
+            .child("${FirebaseAuth.instance.currentUser.uid}")
+            .getDownloadURL();
+
+        await FirebaseAuth.instance.currentUser.updateProfile(
+            displayName: _controllerName.text, photoURL: _imageUrlStream);
         var directory = await getApplicationDocumentsDirectory();
         final file = File(directory.path + "/data.json");
-        await file.writeAsStringSync(jsonEncode({
+        file.writeAsStringSync(jsonEncode({
           "isLogged": true,
           "name": _controllerName.text,
-          "email": _controllerEmail.text
+          "email": _controllerEmail.text,
+          "image": await _imageUrlStream
         }));
         Navigator.pushAndRemoveUntil(
             context,
@@ -240,7 +285,12 @@ class _CadastroAndroidState extends State<CadastroAndroid> {
     }
   }
 
-  Widget campForm(TextInputType keyboardType, Size size, String text, Icon icon,
+  Widget campForm(
+      TextInputType keyboardType,
+      TextCapitalization textCapitalization,
+      Size size,
+      String text,
+      Icon icon,
       TextEditingController controller) {
     return Container(
       width: size.width * 0.9,
@@ -250,9 +300,29 @@ class _CadastroAndroidState extends State<CadastroAndroid> {
         borderRadius: BorderRadius.circular(40),
       ),
       child: TextField(
+        textCapitalization: textCapitalization,
+        obscureText: text == "Digite uma senha" ? visiblePassword : false,
         controller: controller,
         decoration: InputDecoration(
             prefixIcon: icon,
+            suffixIcon: text == "Digite uma senha"
+                ? IconButton(
+                    icon: visiblePassword == true
+                        ? Icon(
+                            Icons.remove_red_eye,
+                            color: Colors.black,
+                          )
+                        : Icon(
+                            Icons.remove_red_eye_outlined,
+                            color: Colors.black,
+                          ),
+                    onPressed: () {
+                      setState(() {
+                        visiblePassword = !visiblePassword;
+                      });
+                    },
+                  )
+                : null,
             border: InputBorder.none,
             hintText: text,
             contentPadding: EdgeInsets.only(left: 0, top: 14),

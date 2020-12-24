@@ -1,14 +1,13 @@
 //---- Packages
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:correios/src/android/view/auth/Cadastro.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 //---- Screens
 import 'package:correios/src/android/nav.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:correios/src/android/view/auth/Cadastro.dart';
 
 class LoginAndroid extends StatefulWidget {
   @override
@@ -16,6 +15,8 @@ class LoginAndroid extends StatefulWidget {
 }
 
 class _LoginAndroidState extends State<LoginAndroid> {
+  bool visiblePassword = true;
+
   TextEditingController _controllerEmail = TextEditingController();
   TextEditingController _controllerPassword = TextEditingController();
 
@@ -65,27 +66,29 @@ class _LoginAndroidState extends State<LoginAndroid> {
                   height: size.height * 0.25,
                 ),
                 campForm(
-                    TextInputType.emailAddress,
-                    size,
-                    "Digite seu email",
-                    Icon(
-                      Icons.email,
-                      color: Colors.black,
-                    ),
-                    _controllerEmail),
+                  TextInputType.emailAddress,
+                  size,
+                  "Digite seu email",
+                  Icon(
+                    Icons.email,
+                    color: Colors.black,
+                  ),
+                  _controllerEmail,
+                ),
                 Divider(
                   color: Colors.white,
                   height: 20,
                 ),
                 campForm(
-                    TextInputType.visiblePassword,
-                    size,
-                    "Digite sua senha",
-                    Icon(
-                      Icons.remove_red_eye,
-                      color: Colors.black,
-                    ),
-                    _controllerPassword),
+                  TextInputType.visiblePassword,
+                  size,
+                  "Digite sua senha",
+                  Icon(
+                    Icons.vpn_key,
+                    color: Colors.black,
+                  ),
+                  _controllerPassword,
+                ),
                 Divider(
                   color: Colors.white,
                 ),
@@ -185,23 +188,28 @@ class _LoginAndroidState extends State<LoginAndroid> {
         ));
   }
 
+  void snackBar(String text) {
+    _snackBar.currentState.showSnackBar(SnackBar(
+      backgroundColor: Colors.yellow,
+      content: Text("$text",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+    ));
+  }
+
   Future login() async {
     if (_controllerEmail.text == "" || _controllerPassword.text == "") {
-      _snackBar.currentState.showSnackBar(SnackBar(
-        backgroundColor: Colors.yellow,
-        content: Text("Preencha todos os campos",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      ));
+      snackBar("Preencha todos os campos");
     } else if (_controllerEmail.text != "" && _controllerPassword.text != "") {
       try {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
             email: _controllerEmail.text, password: _controllerPassword.text);
         var directory = await getApplicationDocumentsDirectory();
         final file = File(directory.path + "/data.json");
-        await file.writeAsStringSync(jsonEncode({
+        file.writeAsStringSync(jsonEncode({
           "isLogged": true,
           "name": FirebaseAuth.instance.currentUser.displayName,
-          "email": FirebaseAuth.instance.currentUser.email
+          "email": FirebaseAuth.instance.currentUser.email,
+          "image": FirebaseAuth.instance.currentUser.photoURL
         }));
         Navigator.pushAndRemoveUntil(
             context,
@@ -209,17 +217,11 @@ class _LoginAndroidState extends State<LoginAndroid> {
             (screen) => false);
       } catch (e) {
         if (e.code == "user-not-found") {
-          _snackBar.currentState.showSnackBar(SnackBar(
-            backgroundColor: Colors.yellow,
-            content: Text("Email não encontrado",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          ));
+          snackBar("Email não encontrado");
         } else if (e.code == "wrong-password") {
-          _snackBar.currentState.showSnackBar(SnackBar(
-            backgroundColor: Colors.yellow,
-            content: Text("Senha errada",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          ));
+          snackBar("enha errada");
+        } else if (e.code == "invalid-email") {
+          snackBar("Email inválido");
         }
         print(e);
       }
@@ -236,9 +238,28 @@ class _LoginAndroidState extends State<LoginAndroid> {
         borderRadius: BorderRadius.circular(40),
       ),
       child: TextField(
+        obscureText: text == "Digite sua senha" ? visiblePassword : false,
         controller: controller,
         decoration: InputDecoration(
             prefixIcon: icon,
+            suffixIcon: text == "Digite sua senha"
+                ? IconButton(
+                    icon: visiblePassword
+                        ? Icon(
+                            Icons.remove_red_eye,
+                            color: Colors.black,
+                          )
+                        : Icon(
+                            Icons.remove_red_eye_outlined,
+                            color: Colors.black,
+                          ),
+                    onPressed: () {
+                      setState(() {
+                        visiblePassword = !visiblePassword;
+                      });
+                    },
+                  )
+                : null,
             border: InputBorder.none,
             hintText: text,
             contentPadding: EdgeInsets.only(left: 0, top: 14),

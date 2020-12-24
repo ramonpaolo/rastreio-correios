@@ -1,10 +1,12 @@
+//---- Packages
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:correios/src/android/view/home/product.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:flutter/material.dart';
+
+//---- Screens
+import 'package:correios/src/android/view/home/product.dart';
 
 class GridViewAndroid extends StatefulWidget {
   GridViewAndroid({Key key, this.codes}) : super(key: key);
@@ -105,12 +107,14 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
                                   )),
                               ListTile(
                                 title: Text(widget.codes[index]["name"]),
-                                subtitle: Text(
-                                  snapshot.data["eventos"][0]["status"] ==
-                                          "Objeto encaminhado"
-                                      ? "${snapshot.data["eventos"][0]["subStatus"][0]} ${snapshot.data["eventos"][0]["subStatus"][1]} "
-                                      : snapshot.data["eventos"][0]["status"],
-                                ),
+                                subtitle: Text(snapshot
+                                            .data["eventos"].length !=
+                                        0
+                                    ? "${snapshot.data["eventos"][0]["status"]}" ==
+                                            "Objeto encaminhado"
+                                        ? "${snapshot.data["eventos"][0]["subStatus"][0]} ${snapshot.data["eventos"][0]["subStatus"][1]} "
+                                        : "${snapshot.data["eventos"][0]["status"]}"
+                                    : "Sem eventos"),
                                 trailing: Icon(
                                   Icons.track_changes,
                                   color: Colors.yellow[700],
@@ -127,6 +131,19 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
                       child: CircularProgressIndicator(),
                     ));
               } else if (snapshot.connectionState == ConnectionState.none) {
+                return Container(
+                    width: size.width,
+                    height: size.height * 0.2,
+                    child: Center(
+                      child: Text(
+                        "Error",
+                        style: TextStyle(
+                            fontSize: 22,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ));
+              } else if (snapshot.hasError) {
                 return Container(
                     width: size.width,
                     height: size.height * 0.2,

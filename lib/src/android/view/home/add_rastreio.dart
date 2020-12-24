@@ -163,8 +163,10 @@ class _RastreioAndroidState extends State<RastreioAndroid> {
               ),
               GestureDetector(
                   onTap: () async {
-                    if (_controllerCode.text.length >= 13 &&
-                        _controllerName.text != "") {
+                    if (_controllerCode.text.length == 13 &&
+                        _controllerName.text != "" &&
+                        _imageUrl != "") {
+                      Future.delayed(Duration(seconds: 2), () => null);
                       try {
                         var copyTrack = await FirebaseFirestore.instance
                             .collection("rastreio")

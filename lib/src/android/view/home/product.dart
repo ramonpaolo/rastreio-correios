@@ -1,3 +1,4 @@
+//---- Packages
 import 'package:flutter/material.dart';
 
 class ProductAndroid extends StatefulWidget {
@@ -86,10 +87,26 @@ class _ProductAndroidState extends State<ProductAndroid> {
                                         "Data: ${widget.data["eventos"][index]["data"]}"),
                                   ),
                                   Padding(
+                                    padding:
+                                        EdgeInsets.only(left: 16, right: 16),
+                                    child: Text(widget
+                                                .data["eventos"][index]
+                                                    ["subStatus"]
+                                                .length >=
+                                            2
+                                        ? "${widget.data["eventos"][index]["subStatus"][0]}"
+                                        : ""),
+                                  ),
+                                  Padding(
                                       padding:
                                           EdgeInsets.only(left: 16, right: 16),
-                                      child: Text(
-                                          "${widget.data["eventos"][index]["subStatus"][0]}")),
+                                      child: Text(widget
+                                                  .data["eventos"][index]
+                                                      ["subStatus"]
+                                                  .length >=
+                                              2
+                                          ? "${widget.data["eventos"][index]["subStatus"][1]}"
+                                          : "Encomenda ainda em: ${widget.data["eventos"][index]["local"]}")),
                                   Padding(
                                       padding: EdgeInsets.only(
                                           left: 16, right: 16, top: 6),
