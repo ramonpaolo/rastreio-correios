@@ -43,11 +43,11 @@ class _ProductAndroidState extends State<ProductAndroid> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(40),
                 child: Container(
+                  height: size.height * 0.25,
                   child: Image.network(
                     "${widget.urlPhoto}",
                     filterQuality: FilterQuality.high,
                     fit: BoxFit.cover,
-                    height: size.height * 0.3,
                   ),
                 ),
               ),

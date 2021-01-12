@@ -210,11 +210,12 @@ class _LoginAndroidState extends State<LoginAndroid> {
             email: _controllerEmail.text, password: _controllerPassword.text);
         var directory = await getApplicationDocumentsDirectory();
         final file = File(directory.path + "/data.json");
-        await file.writeAsStringSync(await jsonEncode({
+        file.writeAsStringSync(jsonEncode({
           "isLogged": true,
           "name": FirebaseAuth.instance.currentUser.displayName,
           "email": FirebaseAuth.instance.currentUser.email,
-          "image": FirebaseAuth.instance.currentUser.photoURL
+          "image": FirebaseAuth.instance.currentUser.photoURL,
+          "grid": false
         }));
         print("Dados salvos");
         await Navigator.pushAndRemoveUntil(

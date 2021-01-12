@@ -1,11 +1,14 @@
 //---- Packages
-import 'package:correios/src/android/view/home/add_rastreio.dart';
+import 'dart:convert';
+import 'dart:io';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 //---- Screens
 import 'package:correios/src/android/view/home/Home.dart';
 import 'package:correios/src/android/view/user/User.dart';
+import 'package:correios/src/android/view/home/add_rastreio.dart';
 
 class NavAndroid extends StatefulWidget {
   @override
@@ -27,7 +30,26 @@ class _NavAndroidState extends State<NavAndroid> {
       case 1:
         return UserAndroid();
         break;
+      default:
+        HomeAndroid(
+          grid: grid,
+        );
     }
+  }
+
+  Future getData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File(directory.path + "/data.json");
+    var data = await jsonDecode(file.readAsStringSync());
+    setState(() {
+      grid = data["grid"];
+    });
+  }
+
+  @override
+  void initState() {
+    getData();
+    super.initState();
   }
 
   @override
@@ -39,14 +61,21 @@ class _NavAndroidState extends State<NavAndroid> {
                 elevation: 0.0,
                 actions: [
                   IconButton(
+                    tooltip: "Grid Rastreio",
                     icon: Icon(
                       Icons.grid_view,
                       color: Colors.yellow[700],
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      final directory =
+                          await getApplicationDocumentsDirectory();
+                      final file = File(directory.path + "/data.json");
+                      var data = await jsonDecode(file.readAsStringSync());
                       setState(() {
-                        grid = !grid;
+                        data["grid"] = !data["grid"];
+                        grid = data["grid"];
                       });
+                      file.writeAsStringSync(jsonEncode(data));
                     },
                   ),
                   IconButton(

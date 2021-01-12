@@ -23,6 +23,12 @@ class _RastreioAndroidState extends State<RastreioAndroid> {
   var _imageUrl;
   var image;
 
+  snackbar(String text) {
+    _keySnackBar.currentState.showSnackBar(SnackBar(
+      content: Text(text),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -63,13 +69,9 @@ class _RastreioAndroidState extends State<RastreioAndroid> {
                   controller: _controllerCode,
                   validator: (value) {
                     if (value.isEmpty) {
-                      _keySnackBar.currentState.showSnackBar(SnackBar(
-                        content: Text("Campo de rastreio vazio"),
-                      ));
+                      snackbar("Campo de rastreio vazio");
                     } else if (value.length <= 12) {
-                      _keySnackBar.currentState.showSnackBar(SnackBar(
-                        content: Text("Campo de rastreio menor que 13"),
-                      ));
+                      snackbar("Campo de rastreio menor que 13");
                     }
                     return null;
                   },
@@ -94,9 +96,7 @@ class _RastreioAndroidState extends State<RastreioAndroid> {
                   controller: _controllerName,
                   validator: (value) {
                     if (value.isEmpty) {
-                      _keySnackBar.currentState.showSnackBar(SnackBar(
-                        content: Text("Nome do rastreio vazio"),
-                      ));
+                      snackbar("Nome do rastreio vazio");
                     }
                     return null;
                   },
@@ -151,12 +151,12 @@ class _RastreioAndroidState extends State<RastreioAndroid> {
               _imageUrl != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(40),
-                      child: Container(
-                          child: Image.file(
+                      child: Image.file(
                         File(image.path),
-                        width: size.width,
-                        height: size.height * 0.32,
-                      )))
+                        height: size.height * 0.28,
+                        width: size.width * 0.9,
+                        fit: BoxFit.cover,
+                      ))
                   : Text(""),
               Divider(
                 color: Colors.white,
@@ -185,7 +185,7 @@ class _RastreioAndroidState extends State<RastreioAndroid> {
                             {
                               "name": "${_controllerName.text}",
                               "code": "${_controllerCode.text}",
-                              "photoUrl": "${_imageUrl}"
+                              "photoUrl": "$_imageUrl"
                             }
                           ]
                         });
@@ -198,18 +198,13 @@ class _RastreioAndroidState extends State<RastreioAndroid> {
                             {
                               "name": "${_controllerName.text}",
                               "code": "${_controllerCode.text}",
-                              "photoUrl": "${_imageUrl}"
+                              "photoUrl": "$_imageUrl"
                             }
                           ]
                         });
                       }
-
-                      Future.delayed(
-                          Duration(seconds: 1), () => Navigator.pop(context));
                     } else {
-                      _keySnackBar.currentState.showSnackBar(SnackBar(
-                        content: Text("Complete o cadastro do rastreio"),
-                      ));
+                      snackbar("Complete o cadastro do rastreio");
                     }
                   },
                   child: Container(

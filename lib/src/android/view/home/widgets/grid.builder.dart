@@ -9,25 +9,22 @@ import 'package:flutter/material.dart';
 import 'package:correios/src/android/view/home/product.dart';
 
 class GridViewAndroid extends StatefulWidget {
-  GridViewAndroid({Key key, this.codes}) : super(key: key);
-  final List codes;
+  GridViewAndroid({Key key, this.products}) : super(key: key);
+  final List products;
   @override
   _GridViewAndroidState createState() => _GridViewAndroidState();
 }
 
 class _GridViewAndroidState extends State<GridViewAndroid> {
   Future getLocationProduct(String codigoRastreio) async {
-    print("Codígo do rastreio: $codigoRastreio");
     var result = await http.get(
         """https://api.linketrack.com/track/json?user=ramonpaolomaran12@gmail.com&token=81a5dee9e7fd891156d3f99f5e1da6654de3873418ba938c6db20b1f5d1e69c5&codigo=$codigoRastreio""");
-    print(await result.body);
-    Map resultado = {};
     try {
-      resultado = await jsonDecode(result.body);
+      return await jsonDecode(result.body);
     } catch (e) {
       print(e);
+      return;
     }
-    return resultado;
   }
 
   @override
@@ -38,10 +35,10 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
         crossAxisCount: 2,
         childAspectRatio: 0.75,
       ),
-      itemCount: widget.codes.length,
+      itemCount: widget.products.length,
       itemBuilder: (context, index) {
         return FutureBuilder(
-            future: getLocationProduct(widget.codes[index]["code"]),
+            future: getLocationProduct(widget.products[index]["code"]),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
                 return GestureDetector(
@@ -57,11 +54,11 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
                                       MaterialPageRoute(
                                           builder: (context) => ProductAndroid(
                                                 data: snapshot.data,
-                                                name: widget.codes[index]
+                                                name: widget.products[index]
                                                     ["name"],
-                                                urlPhoto: widget.codes[index]
+                                                urlPhoto: widget.products[index]
                                                     ["photoUrl"],
-                                                //codes[index]["image"]
+                                                //products[index]["image"]
                                               ))),
                                   child: Stack(
                                     alignment: Alignment.topRight,
@@ -74,7 +71,7 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
                                           width: size.width,
                                           height: size.height * 0.2,
                                           child: Image.network(
-                                            "${widget.codes[index]["photoUrl"]}",
+                                            "${widget.products[index]["photoUrl"]}",
                                             filterQuality: FilterQuality.high,
                                             fit: BoxFit.cover,
                                           ),
@@ -106,20 +103,16 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
                                     ],
                                   )),
                               ListTile(
-                                title: Text(widget.codes[index]["name"]),
-                                subtitle: Text(snapshot
-                                            .data["eventos"].length !=
-                                        0
-                                    ? "${snapshot.data["eventos"][0]["status"]}" ==
-                                            "Objeto encaminhado"
-                                        ? "${snapshot.data["eventos"][0]["subStatus"][0]} ${snapshot.data["eventos"][0]["subStatus"][1]} "
-                                        : "${snapshot.data["eventos"][0]["status"]}"
-                                    : "Sem eventos"),
-                                trailing: Icon(
-                                  Icons.track_changes,
-                                  color: Colors.yellow[700],
-                                ),
-                              )
+                                  title: Text(widget.products[index]["name"]),
+                                  subtitle: Text(snapshot
+                                              .data["eventos"].length !=
+                                          0
+                                      ? "${snapshot.data["eventos"][0]["status"]}" ==
+                                              "Objeto encaminhado"
+                                          ? "${snapshot.data["eventos"][0]["subStatus"][0]} ${snapshot.data["eventos"][0]["subStatus"][1]} "
+                                          : "${snapshot.data["eventos"][0]["status"]}"
+                                      : "Sem eventos"),
+                                  trailing: _iconTrack(snapshot.data))
                             ],
                           ),
                         )));
@@ -130,20 +123,7 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
                     child: Center(
                       child: CircularProgressIndicator(),
                     ));
-              } else if (snapshot.connectionState == ConnectionState.none) {
-                return Container(
-                    width: size.width,
-                    height: size.height * 0.2,
-                    child: Center(
-                      child: Text(
-                        "Error",
-                        style: TextStyle(
-                            fontSize: 22,
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ));
-              } else if (snapshot.hasError) {
+              } else {
                 return Container(
                     width: size.width,
                     height: size.height * 0.2,
@@ -162,15 +142,42 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
     );
   }
 
+  Widget _iconTrack(Map data) {
+    if ("${data["eventos"][0]["status"]}" == "Objeto encaminhado") {
+      return Tooltip(
+          child: Icon(
+            Icons.track_changes,
+            color: Colors.yellow[700],
+          ),
+          message: "Objeto em trânsito");
+    } else if ("${data["eventos"][0]["status"]}" ==
+        "Objeto entregue ao destinatário") {
+      return Tooltip(
+        child: Icon(
+          Icons.person,
+          color: Colors.yellow[700],
+        ),
+        message: "Entregue ao Destinatário",
+      );
+    } else {
+      return Tooltip(
+        child: Icon(
+          Icons.delivery_dining,
+          color: Colors.yellow[700],
+        ),
+        message: "Objeto indo ao usuário",
+      );
+    }
+  }
+
   Future removeRastreio(index) async {
     List updateList = [];
-    print(widget.codes[index]["code"]);
     DocumentSnapshot copyTrack = await FirebaseFirestore.instance
         .collection("rastreio")
-        .doc(await FirebaseAuth.instance.currentUser.uid)
+        .doc(FirebaseAuth.instance.currentUser.uid)
         .get();
     for (var x = 0; x < await copyTrack["products"].length; x++) {
-      if (copyTrack["products"][x]["code"] != widget.codes[index]["code"]) {
+      if (copyTrack["products"][x]["code"] != widget.products[index]["code"]) {
         setState(() {
           updateList.add(copyTrack["products"][x]);
         });
@@ -186,29 +193,25 @@ class _GridViewAndroidState extends State<GridViewAndroid> {
 
   Future getData() async {
     setState(() {
-      widget.codes.clear();
+      widget.products.clear();
     });
-    try {
-      var readFile = await FirebaseFirestore.instance
-          .collection("rastreio")
-          .doc(FirebaseAuth.instance.currentUser.uid)
-          .get();
-      for (var x = 0; x < await readFile["products"].length; x++) {
-        try {
-          print(readFile["products"][x]["photoUrl"]);
-          setState(() {
-            widget.codes.add({
-              "code": readFile["products"][x]["code"],
-              "name": readFile["products"][x]["name"],
-              "photoUrl": readFile["products"][x]["photoUrl"]
-            });
+
+    DocumentSnapshot datas = await FirebaseFirestore.instance
+        .collection("rastreio")
+        .doc(FirebaseAuth.instance.currentUser.uid)
+        .get();
+    for (var x = 0; x < await datas["products"].length; x++) {
+      try {
+        setState(() {
+          widget.products.add({
+            "code": datas["products"][x]["code"],
+            "name": datas["products"][x]["name"],
+            "photoUrl": datas["products"][x]["photoUrl"]
           });
-        } catch (e) {
-          print("Sem dados para carregar");
-        }
+        });
+      } catch (e) {
+        print("Sem dados para carregar");
       }
-    } catch (e) {
-      print("Sem dados");
     }
   }
 }

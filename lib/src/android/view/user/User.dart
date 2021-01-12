@@ -21,7 +21,6 @@ class _UserAndroidState extends State<UserAndroid> {
   Future getDataLocal() async {
     final directory = await getApplicationDocumentsDirectory();
     final file = File(directory.path + "/data.json");
-    //print(await jsonDecode(file.readAsStringSync()));
     return await jsonDecode(file.readAsStringSync());
   }
 
@@ -85,32 +84,14 @@ class _UserAndroidState extends State<UserAndroid> {
                                   "Apagar todos os rastreios",
                                   style: TextStyle(color: Colors.red),
                                 ),
-                                onPressed: () async {
-                                  await FirebaseFirestore.instance
-                                      .collection("rastreio")
-                                      .doc(
-                                          FirebaseAuth.instance.currentUser.uid)
-                                      .delete();
-                                },
+                                onPressed: () async => deleteRastreios(),
                               ),
                               TextButton(
                                 child: Text(
                                   "Deslogar",
                                   style: TextStyle(color: Colors.yellow),
                                 ),
-                                onPressed: () async {
-                                  await Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => LoginAndroid()),
-                                      (screen) => false);
-                                  final directory =
-                                      await getApplicationDocumentsDirectory();
-                                  final file =
-                                      File(directory.path + "/data.json");
-                                  await file.delete();
-                                  await FirebaseAuth.instance.signOut();
-                                },
+                                onPressed: () async => deslogar(),
                               ),
                               TextButton(
                                 child: Text(
@@ -153,35 +134,8 @@ class _UserAndroidState extends State<UserAndroid> {
                                                               color:
                                                                   Colors.red),
                                                         ),
-                                                        onPressed: () async {
-                                                          final directory =
-                                                              await getApplicationDocumentsDirectory();
-                                                          final file = File(
-                                                              directory.path +
-                                                                  "/data.json");
-                                                          await file.delete();
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  "rastreio")
-                                                              .doc(FirebaseAuth
-                                                                  .instance
-                                                                  .currentUser
-                                                                  .uid)
-                                                              .delete();
-                                                          await FirebaseAuth
-                                                              .instance
-                                                              .currentUser
-                                                              .delete();
-                                                          await Navigator.pushAndRemoveUntil(
-                                                              context,
-                                                              MaterialPageRoute(
-                                                                  builder:
-                                                                      (context) =>
-                                                                          LoginAndroid()),
-                                                              (screen) =>
-                                                                  false);
-                                                        },
+                                                        onPressed: () async =>
+                                                            await deleteUser(),
                                                       )
                                                     ],
                                                   )
@@ -196,14 +150,57 @@ class _UserAndroidState extends State<UserAndroid> {
                         );
                       } else if (snapshot.connectionState ==
                           ConnectionState.waiting) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
+                        return Container(
+                            width: size.width,
+                            height: size.height,
+                            child: Center(child: CircularProgressIndicator()));
+                      } else {
+                        return Container(
+                            width: size.width,
+                            height: size.height,
+                            child: Center(
+                              child: Text(
+                                "Error",
+                                style: TextStyle(
+                                    fontSize: 22,
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ));
                       }
                     })));
       },
       duration: Duration(milliseconds: 700),
       tween: tween,
     );
+  }
+
+  Future deleteUser() async {
+    final file = await getDataLocal();
+    await file.delete();
+    await deleteRastreios();
+    await FirebaseAuth.instance.currentUser.delete();
+    await Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginAndroid()),
+        (screen) => false);
+  }
+
+  Future deleteRastreios() async {
+    await FirebaseFirestore.instance
+        .collection("rastreio")
+        .doc(FirebaseAuth.instance.currentUser.uid)
+        .delete();
+  }
+
+  Future deslogar() async {
+    await Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginAndroid()),
+        (screen) => false);
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File(directory.path + "/data.json");
+    await file.delete();
+    await FirebaseAuth.instance.signOut();
   }
 }

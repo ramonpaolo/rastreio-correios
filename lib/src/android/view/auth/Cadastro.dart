@@ -266,7 +266,8 @@ class _CadastroAndroidState extends State<CadastroAndroid> {
           "isLogged": true,
           "name": _controllerName.text,
           "email": _controllerEmail.text,
-          "image": await _imageUrlStream
+          "image": await _imageUrlStream,
+          "grid": false
         }));
         Navigator.pushAndRemoveUntil(
             context,
